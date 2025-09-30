@@ -47,8 +47,7 @@ data class InteractionAddToPlaylistRequest(
  * All routes require authentication to track user-specific interactions
  */
 fun Route.interactionController() {
-    // Use the enhanced controller with logging
-    val interactionController by inject<InteractionControllerWithLogging>()
+    val interactionController by inject<InteractionController>()
     
     route("/api/interactions") {
         // All interaction endpoints require authentication

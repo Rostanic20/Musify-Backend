@@ -365,11 +365,8 @@ val recommendationModule = module {
 
 val controllerModule = module {
     // Controllers
-    single { com.musify.presentation.controller.InteractionController(get()) }
-    
-    // Enhanced controller with logging
     single { 
-        com.musify.presentation.controller.InteractionControllerWithLogging(
+        com.musify.presentation.controller.InteractionController(
             realTimeLearningService = get(),
             metricsCollector = get()
         )
