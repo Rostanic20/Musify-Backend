@@ -129,8 +129,8 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.4.14")
     
     // Dependency Injection
-    implementation("io.insert-koin:koin-core:3.5.3")
-    implementation("io.insert-koin:koin-ktor:3.5.3")
+    implementation("io.insert-koin:koin-core:4.1.1")
+    implementation("io.insert-koin:koin-ktor:4.1.1")
     
     // Validation
     implementation("io.konform:konform:0.4.0")
@@ -144,8 +144,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("io.insert-koin:koin-test:3.5.3")
-    testImplementation("io.insert-koin:koin-test-junit5:3.5.3")
+    testImplementation("io.insert-koin:koin-test:4.1.1")
+    testImplementation("io.insert-koin:koin-test-junit5:4.1.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
