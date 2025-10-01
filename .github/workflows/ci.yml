@@ -90,7 +90,7 @@ jobs:
       if: success() || failure()
       
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: success() || failure()
       with:
         name: test-results
@@ -129,7 +129,7 @@ jobs:
       run: docker save musify-backend:${{ github.sha }} > musify-backend.tar
       
     - name: Upload Docker image
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: docker-image
         path: musify-backend.tar
@@ -155,7 +155,7 @@ jobs:
       continue-on-error: true
       
     - name: Upload Ktlint report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: ktlint-report
