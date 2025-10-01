@@ -113,8 +113,8 @@ dependencies {
     implementation("software.amazon.awssdk:sts:2.21.0")
     
     // Image processing
-    implementation("com.sksamuel.scrimage:scrimage-core:4.0.32")
-    implementation("com.sksamuel.scrimage:scrimage-webp:4.0.32")
+    implementation("com.sksamuel.scrimage:scrimage-core:4.3.5")
+    implementation("com.sksamuel.scrimage:scrimage-webp:4.3.5")
     
     // Error tracking
     implementation("io.sentry:sentry:6.34.0")
