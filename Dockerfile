@@ -17,7 +17,7 @@ COPY src ./src
 RUN gradle buildFatJar --no-daemon
 
 # Runtime stage
-FROM amazoncorretto:17-alpine
+FROM amazoncorretto:25-alpine
 
 # Install required packages
 RUN apk add --no-cache \
