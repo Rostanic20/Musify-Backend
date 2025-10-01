@@ -94,7 +94,7 @@ dependencies {
     implementation("com.google.zxing:javase:3.5.3")
     
     // File handling and audio processing
-    implementation("commons-io:commons-io:2.15.1")
+    implementation("commons-io:commons-io:2.20.0")
     implementation("com.mpatric:mp3agic:0.9.1")
     
     // Caching
