@@ -121,9 +121,9 @@ dependencies {
     implementation("io.sentry:sentry-logback:6.34.0")
     
     // Monitoring and Metrics
-    implementation("io.micrometer:micrometer-core:1.12.0")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.12.0")
-    implementation("io.micrometer:micrometer-registry-cloudwatch2:1.12.0")
+    implementation("io.micrometer:micrometer-core:1.15.4")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.15.4")
+    implementation("io.micrometer:micrometer-registry-cloudwatch2:1.15.4")
     
     // Logging
     implementation("ch.qos.logback:logback-classic:1.4.14")
