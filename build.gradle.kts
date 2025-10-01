@@ -100,7 +100,7 @@ dependencies {
     // Caching
     implementation("io.github.reactivecircus.cache4k:cache4k:0.12.0")
     // Redis clients - trying Jedis instead of Lettuce due to compilation issues
-    implementation("redis.clients:jedis:5.1.0")
+    implementation("redis.clients:jedis:6.2.0")
     
     // Email
     implementation("com.sun.mail:javax.mail:1.6.2")
