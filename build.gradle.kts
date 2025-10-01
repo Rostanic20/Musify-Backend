@@ -98,7 +98,7 @@ dependencies {
     implementation("com.mpatric:mp3agic:0.9.1")
     
     // Caching
-    implementation("io.github.reactivecircus.cache4k:cache4k:0.12.0")
+    implementation("io.github.reactivecircus.cache4k:cache4k:0.14.0")
     // Redis clients - trying Jedis instead of Lettuce due to compilation issues
     implementation("redis.clients:jedis:5.1.0")
     
