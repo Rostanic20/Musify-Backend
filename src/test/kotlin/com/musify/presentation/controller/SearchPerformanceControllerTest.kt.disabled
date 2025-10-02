@@ -1,0 +1,262 @@
+package com.musify.presentation.controller
+
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import com.musify.testModule
+import com.musify.database.DatabaseFactory
+import com.musify.database.tables.Users
+import org.junit.jupiter.api.BeforeEach
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.testing.*
+import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.sql.*
+import org.junit.jupiter.api.Test
+import kotlinx.coroutines.delay
+import java.util.*
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+class SearchPerformanceControllerTest {
+    
+    @BeforeEach
+    fun setup() {
+        // Ensure clean state for each test
+        System.setProperty("DATABASE_URL", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL")
+        System.setProperty("DATABASE_DRIVER", "org.h2.Driver")
+        System.setProperty("JWT_SECRET", "test-secret-key")
+        System.setProperty("REDIS_ENABLED", "false")
+    }
+    
+    companion object {
+        init {
+            System.setProperty("DATABASE_URL", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL")
+            System.setProperty("DATABASE_DRIVER", "org.h2.Driver")
+            System.setProperty("JWT_SECRET", "test-secret-key")
+            System.setProperty("REDIS_ENABLED", "false")
+        }
+    }
+    
+    private val validToken: String by lazy {
+        JWT.create()
+            .withAudience("musify-app")
+            .withIssuer("musify-backend")
+            .withClaim("userId", 1)
+            .withClaim("email", "test@example.com")
+            .withExpiresAt(Date(System.currentTimeMillis() + 60 * 1000))
+            .sign(Algorithm.HMAC256("test-secret-key"))
+    }
+    
+    private suspend fun createTestUserWithRetry(): Int {
+        // Try to create user with retries to handle database timing
+        var attempts = 0
+        val maxAttempts = 5
+        
+        while (attempts < maxAttempts) {
+            try {
+                return DatabaseFactory.dbQuery {
+                    try {
+                        // Try to create user with ID=1 to match JWT token
+                        val userId = Users.insertAndGetId {
+                            it[id] = org.jetbrains.exposed.dao.id.EntityID(1, Users)
+                            it[username] = "testuser"
+                            it[email] = "test@example.com"
+                            it[passwordHash] = "password"
+                            it[displayName] = "Test User"
+                        }
+                        userId.value
+                    } catch (e: Exception) {
+                        // User might already exist, just return ID 1
+                        1
+                    }
+                }
+            } catch (e: Exception) {
+                attempts++
+                if (attempts >= maxAttempts) {
+                    throw RuntimeException("Failed to create test user after $maxAttempts attempts", e)
+                }
+                delay(200) // Wait before retrying
+            }
+        }
+        
+        throw RuntimeException("Failed to create test user")
+    }
+    
+    @Test
+    fun `GET performance metrics requires authentication`() = testApplication {
+        application {
+            testModule()
+        }
+        
+        // When - attempt without auth
+        val response = client.get("/api/search/performance/metrics")
+        
+        // Then - should require auth
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+    
+    @Test
+    fun `GET performance metrics returns valid response with auth`() = testApplication {
+        application {
+            testModule()
+        }
+        
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    ignoreUnknownKeys = true
+                    isLenient = true
+                })
+            }
+        }
+        
+        // Create test user for JWT authentication
+        createTestUserWithRetry()
+        
+        // When
+        val response = client.get("/api/search/performance/metrics") {
+            bearerAuth(validToken)
+        }
+        
+        // Then
+        assertEquals(HttpStatusCode.OK, response.status)
+        val responseBody = response.bodyAsText()
+        assertTrue(responseBody.contains("avgResponseTimeMs"))
+        assertTrue(responseBody.contains("cacheHitRate"))
+        assertTrue(responseBody.contains("sub50msPercentage"))
+    }
+    
+    @Test
+    fun `GET performance report requires authentication`() = testApplication {
+        application {
+            testModule()
+        }
+        
+        // When - attempt without auth
+        val response = client.get("/api/search/performance/report")
+        
+        // Then - should require auth
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+    
+    @Test
+    fun `GET performance report returns detailed report with auth`() = testApplication {
+        application {
+            testModule()
+        }
+        
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    ignoreUnknownKeys = true
+                    isLenient = true
+                })
+            }
+        }
+        
+        // Create test user for JWT authentication
+        createTestUserWithRetry()
+        
+        // When
+        val response = client.get("/api/search/performance/report") {
+            bearerAuth(validToken)
+        }
+        
+        // Then
+        assertEquals(HttpStatusCode.OK, response.status)
+        val responseBody = response.bodyAsText()
+        assertTrue(responseBody.contains("performance"))
+        assertTrue(responseBody.contains("cache"))
+        assertTrue(responseBody.contains("recommendations"))
+    }
+    
+    @Test
+    fun `POST cache clear requires authentication`() = testApplication {
+        application {
+            testModule()
+        }
+        
+        // When - attempt without auth
+        val response = client.post("/api/search/performance/cache/clear")
+        
+        // Then - should require auth
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+    
+    @Test
+    fun `POST cache clear clears cache with auth`() = testApplication {
+        application {
+            testModule()
+        }
+        
+        // Create test user for JWT authentication
+        createTestUserWithRetry()
+        
+        // When
+        val response = client.post("/api/search/performance/cache/clear") {
+            bearerAuth(validToken)
+        }
+        
+        // Then
+        assertEquals(HttpStatusCode.OK, response.status)
+        val responseBody = response.bodyAsText()
+        assertTrue(responseBody.contains("Cache cleared successfully"))
+    }
+    
+    @Test
+    fun `POST cache warmup requires authentication`() = testApplication {
+        application {
+            testModule()
+        }
+        
+        // When - attempt without auth
+        val response = client.post("/api/search/performance/cache/warmup")
+        
+        // Then - should require auth
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+    
+    @Test
+    fun `POST cache warmup initiates warmup with auth`() = testApplication {
+        application {
+            testModule()
+        }
+        
+        // Create test user for JWT authentication
+        createTestUserWithRetry()
+        
+        // When
+        val response = client.post("/api/search/performance/cache/warmup") {
+            bearerAuth(validToken)
+        }
+        
+        // Then
+        assertEquals(HttpStatusCode.Accepted, response.status)
+        val responseBody = response.bodyAsText()
+        assertTrue(responseBody.contains("Cache warmup initiated"))
+    }
+    
+    @Test
+    fun `GET dashboard returns HTML content`() = testApplication {
+        application {
+            testModule()
+        }
+        
+        // Create test user for JWT authentication
+        createTestUserWithRetry()
+        
+        // When
+        val response = client.get("/api/search/performance/dashboard") {
+            bearerAuth(validToken)
+        }
+        
+        // Then
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(ContentType.Text.Html.withCharset(Charsets.UTF_8), response.contentType())
+        val responseBody = response.bodyAsText()
+        assertTrue(responseBody.contains("<h1>Performance Dashboard</h1>"))
+    }
+}

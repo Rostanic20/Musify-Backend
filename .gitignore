@@ -1,0 +1,95 @@
+# Compiled class file
+*.class
+
+# Log files
+*.log
+logs/
+backend.log
+server.log
+all_tests*.log
+individual_test*.log
+run_output*.log
+test_output*.log
+compile_output*.log
+combined_test*.log
+final_test_run*.log
+test_results*.log
+run_test.log
+
+# Gradle
+.gradle
+build/
+\!gradle-wrapper.jar
+.gradletasknamecache
+
+# IntelliJ IDEA
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+
+# VS Code
+.vscode/
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Local properties
+local.properties
+
+# Uploaded files
+uploads/**/*.mp3
+uploads/**/*.mp4
+uploads/**/*.wav
+test-uploads/**/*
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+
+# Database
+*.db
+*.sqlite
+*.h2.db
+
+# AWS/Cloud credentials and keys
+*.pem
+cloudfront-private-key.pem
+streaming-private-key.pem
+streaming-public-key.pem
+keys/
+
+# Environment files
+.env
+.env.*
+
+# Token files
+*_token.txt
+*_response.json
+
+# Database setup with hardcoded credentials
+setup-database.sql
+setup-postgresql.sh
+
+# User data responses
+user*.json
+user*_token.txt
+
+# Scripts that might contain credentials
+scripts/*-production.sh
+
+# Backup files
+*.bak
+
+# Test data that might contain real info
+test-uploads/
+
+# Certificates and keys (be very careful)
+*.p12
+*.pfx
+*.key
+*.crt
+*.cer

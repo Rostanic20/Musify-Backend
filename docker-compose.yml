@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: musify-postgres
+    environment:
+      POSTGRES_DB: musify
+      POSTGRES_USER: musify_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-musify_pass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./setup-database.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U musify_user -d musify"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: musify-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-musify_redis}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: musify-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      # Server Configuration
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 8080
+      ENVIRONMENT: ${ENVIRONMENT:-staging}
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
+      
+      # Database Configuration
+      DATABASE_DRIVER: org.postgresql.Driver
+      DATABASE_URL: jdbc:postgresql://postgres:5432/musify
+      DATABASE_USER: musify_user
+      DATABASE_PASSWORD: ${DB_PASSWORD:-musify_pass}
+      DATABASE_MAX_POOL_SIZE: 30
+      DATABASE_MIN_IDLE: 5
+      
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: musify-backend
+      JWT_AUDIENCE: musify-app
+      JWT_REALM: musify
+      
+      # Redis Configuration
+      REDIS_ENABLED: "true"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-musify_redis}
+      
+      # Email Configuration
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      
+      # Storage Configuration
+      STORAGE_TYPE: ${STORAGE_TYPE:-local}
+      LOCAL_STORAGE_PATH: /app/uploads
+      
+      # AWS S3 Configuration (if using S3)
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      
+      # Stripe Configuration
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      
+      # Monitoring
+      MONITORING_ENABLED: ${MONITORING_ENABLED:-true}
+      SENTRY_DSN: ${SENTRY_DSN}
+      
+      # Feature Flags
+      FEATURE_OAUTH_ENABLED: ${FEATURE_OAUTH_ENABLED:-false}
+      FEATURE_2FA_ENABLED: ${FEATURE_2FA_ENABLED:-true}
+      FEATURE_PODCASTS_ENABLED: ${FEATURE_PODCASTS_ENABLED:-true}
+      FEATURE_SOCIAL_ENABLED: ${FEATURE_SOCIAL_ENABLED:-true}
+      FEATURE_OFFLINE_MODE_ENABLED: ${FEATURE_OFFLINE_MODE_ENABLED:-false}
+      
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+  redis_data:
