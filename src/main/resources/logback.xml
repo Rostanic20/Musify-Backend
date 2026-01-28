@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Console appender for development with correlation ID -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %X{correlationId:-} %X{requestId:-} %X{userId:-} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File appender for application logs -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/application.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/application-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %X{correlationId:-} %X{requestId:-} %X{userId:-} %X{sessionId:-} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Separate file for interaction logs -->
+    <appender name="INTERACTIONS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/interactions.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/interactions-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %X{correlationId:-} %X{requestId:-} %X{userId:-} %X{songId:-} %X{interactionType:-} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Separate file for database pool monitoring -->
+    <appender name="DB_POOL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/db-pool.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/db-pool-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Performance logs -->
+    <appender name="PERFORMANCE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/performance.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/performance-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %X{endpoint} %X{method} %X{duration} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Error logs -->
+    <appender name="ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/error-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %X{correlationId:-} %X{requestId:-} %X{userId:-} %X{errorCode:-} - %msg%n%ex{full}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Async appenders for better performance -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE" />
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+    </appender>
+
+    <appender name="ASYNC_INTERACTIONS" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="INTERACTIONS" />
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+    </appender>
+
+    <!-- Logger configurations -->
+    <logger name="com.musify.presentation.controller.InteractionController" level="INFO" additivity="false">
+        <appender-ref ref="INTERACTIONS" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="com.musify.core.monitoring.DatabasePoolMonitor" level="INFO" additivity="false">
+        <appender-ref ref="DB_POOL" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="com.musify.core.monitoring" level="INFO" />
+    <logger name="com.musify.infrastructure.cache" level="INFO" />
+    <logger name="com.musify.domain.services" level="INFO" />
+    
+    <!-- Reduce noise from libraries -->
+    <logger name="io.ktor" level="INFO" />
+    <logger name="org.jetbrains.exposed" level="WARN" />
+    <logger name="com.zaxxer.hikari" level="INFO" />
+    <logger name="io.netty" level="WARN" />
+    <logger name="redis.clients.jedis" level="WARN" />
+
+    <!-- Root logger -->
+    <root level="${LOG_LEVEL:-INFO}">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="ASYNC_FILE" />
+        <appender-ref ref="ERROR" />
+    </root>
+</configuration>

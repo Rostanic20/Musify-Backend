@@ -1,0 +1,25 @@
+- Example database setup script
+-- Copy this to setup-database.sql and update with your actual values
+-- DO NOT commit setup-database.sql with real passwords
+
+-- Drop existing database if it exists
+DROP DATABASE IF EXISTS musify;
+
+-- Create new database
+CREATE DATABASE musify CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Create user if not exists
+-- CHANGE THIS PASSWORD!
+CREATE USER IF NOT EXISTS 'musify_user'@'localhost' IDENTIFIED BY 'CHANGE_THIS_PASSWORD';
+
+-- Grant all privileges
+GRANT ALL PRIVILEGES ON musify.* TO 'musify_user'@'localhost';
+
+-- Apply changes
+FLUSH PRIVILEGES;
+
+-- Use the database
+USE musify;
+
+-- Show confirmation
+SELECT 'Database musify created successfully!' as message;
